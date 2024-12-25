@@ -7,6 +7,54 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+
+exports.createResults = async (req, res) => {
+  try {
+    const { resultsRecords, examName, className, section } = req.body;
+
+    console.log("first", resultsRecords);
+    
+    const updatePromises = resultsRecords.map(
+      async ({ studentId, studentName, rollNo, subjects }) => {
+        const query = {
+          schoolId: req.user.schoolId,
+          studentId: studentId,
+          examName: examName,
+        };
+
+        const update = {
+          $set: {
+            schoolId: req.user.schoolId,
+            studentId: studentId,
+            rollNo: rollNo,
+            studentName: studentName,
+            className: className,
+            section: section,
+            examName: examName,
+            subjects,
+          },
+        };
+
+        
+        const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+        return Results.findOneAndUpdate(query, update, options);
+      }
+    );
+
+   
+    const updatedResults = await Promise.all(updatePromises);
+
+    res.status(201).json({ success: true, data: updatedResults });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create/update Results",
+      error: error.message,
+    });
+  }
+};
+
 exports.getResults = async (req, res) => {
   try {
     const { examId, class: className, section } = req.query;
