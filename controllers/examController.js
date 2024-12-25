@@ -117,6 +117,7 @@ exports.updateExam = async (req, res) => {
     }
 };
 
+// examController.js
 exports.getExams = async (req, res) => {
     try {
         const {
@@ -128,14 +129,16 @@ exports.getExams = async (req, res) => {
             section
         } = req.query;
 
+        // Build filter query
         const filter = {
-            schoolId: req.user.schoolId,
+            schoolId: req.user.schoolId, // Get the schoolId from the authenticated user
             ...(academicYear && { academicYear }),
             ...(term && { term }),
             ...(examType && { examType }),
             ...(status && { status })
         };
 
+        // Add className or section filter if provided
         if (className || section) {
             filter['classes'] = {
                 $elemMatch: {
@@ -145,23 +148,31 @@ exports.getExams = async (req, res) => {
             };
         }
 
-        const examData = await ExamModel.find(filter)
-            .populate('createdBy', 'name email')
-            .populate('updatedBy', 'name email');
+        // Fetch exams using the filter
+        const exams = await ExamModel.find(filter); 
 
+        // Manually map createdBy and updatedBy fields
+        const examData = exams.map((exam) => ({
+            ...exam.toObject(), // Convert exam to plain object
+            createdBy: { _id: exam.createdBy }, // Just include the user ID, or include name if needed
+            updatedBy: exam.updatedBy ? { _id: exam.updatedBy } : null,
+        }));
+
+        // Respond with exams data
         res.status(200).json({
             success: true,
             message: "Exams retrieved successfully",
-            examData
+            examData,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to retrieve exams",
-            error: error.message
+            error: error.message,
         });
     }
 };
+
 
 // Example usage for creating an exam
 // const exampleExamData = {
