@@ -9,6 +9,7 @@ const app = express()
 const corsOptions = {
   origin: [
     'https://eshikshamitralms.netlify.app', 
+    'https://eshikshamitra.netlify.app', 
     'https://edaksha.netlify.app',
     'http://localhost:3000',
     'https://corplyxsuperadmin.netlify.app' // Add your new frontend URL here
