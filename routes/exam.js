@@ -10,7 +10,7 @@ const {
     getExamById,
     getExamsByClass,
     getUpcomingExams,
-    // getPublishedExams,
+    getPublishedExams,
     submitExamResults,
     generateReportCard,
     getExamAnalytics
@@ -26,9 +26,9 @@ router.put('/exams/:id', verifyToken, updateExam);
 router.delete('/exams/:id', verifyToken, deleteExam);
 
 // Additional exam routes
-// router.get('/exams/class/:className/section/:section', verifyToken, getExamsByClass);
+router.get('/exams/class/:className/section/:section', verifyToken, getExamsByClass);
 router.get('/exams/upcoming', verifyToken, getUpcomingExams);
-// router.get('/exams/published', verifyToken, getPublishedExams);
+router.get('/exams/published', verifyToken, getPublishedExams);
 
 // Results and analytics routes (maintained from your original commented code)
 router.post('/exams/:id/results', verifyToken, submitExamResults);

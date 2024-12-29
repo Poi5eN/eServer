@@ -20,9 +20,9 @@ router.get('/getmarks', verifyToken, getMarks);
 // New routes with consistent naming
 router.put('/marks/:id', verifyToken, updateMark);
 router.delete('/marks/:id', verifyToken, deleteMark);
-// router.get('/marks/student/:studentId', verifyToken, getStudentMarks);
-// router.get('/marks/exam/:examId', verifyToken, getExamMarks);
-// router.get('/marks/class-performance', verifyToken, getClassPerformance);
-// router.post('/marks/bulk-upload', verifyToken, bulkUploadMarks);
+router.get('/marks/student/:studentId', verifyToken, getStudentMarks);
+router.get('/marks/exam/:examId', verifyToken, getExamMarks);
+router.get('/marks/class-performance', verifyToken, getClassPerformance);
+router.post('/marks/bulk-upload', verifyToken, bulkUploadMarks);
 
 module.exports = router;
