@@ -64,6 +64,7 @@ router.get('/getStudentAndParent/:studentId', verifyToken, admin.getStudentAndPa
 router.get('/getAllStudents', verifyToken, admin.getAllStudents)
 router.put('/deactivateStudent', verifyToken, admin.deactivateStudent);
 router.put('/editStudentParent/:studentId', verifyToken,uploads, admin.editStudentParent);
+router.put('/bulkUpdateStudents', verifyToken,uploads, admin.bulkUpdateStudents);
 // router.put('/editStudentParent', verifyToken, admin.editStudentParent); {Old that takes ID as field}
 router.put('/updateStudent', verifyToken, singleUpload, admin.updateStudent);
 router.get('/getDeactivatedStudents', verifyToken, singleUpload, admin.getDeactivatedStudents);

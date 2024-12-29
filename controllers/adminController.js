@@ -2207,9 +2207,6 @@ exports.getParentWithChildren = async (req, res) => {
 
 
 
-
-
-
 // TRYING ADMISSION END NEW
 
 exports.getDataByAdmissionNumber = async (req, res) => {
@@ -2375,7 +2372,92 @@ exports.getAllParents = async (req, res) => {
   }
 };
 
+exports.bulkUpdateStudents = async (req, res) => {
+  try {
+    const {
+      studentIds, // Array of specific student IDs to update
+      filters, // Filters like class, section, etc.
+      updateFields // Object containing fields to update
+    } = req.body;
 
+    if (!updateFields || Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No update fields provided"
+      });
+    }
+
+    // Build the query based on provided filters and/or student IDs
+    let query = {
+      schoolId: req.user.schoolId,
+      status: "active"
+    };
+
+    // Add studentIds to query if provided
+    if (studentIds && studentIds.length > 0) {
+      query._id = { $in: studentIds };
+    }
+
+    // Add other filters if provided
+    if (filters) {
+      if (filters.class) query.class = filters.class;
+      if (filters.section) query.section = filters.section;
+      // Add any other filters you want to support
+    }
+
+    // Validate the update fields against the schema
+    const validUpdateFields = {};
+    const studentSchema = NewStudentModel.schema;
+
+    for (const [key, value] of Object.entries(updateFields)) {
+      // Handle nested fields (like udisePlusDetails)
+      if (key.includes('.')) {
+        const [parent, child] = key.split('.');
+        if (studentSchema.path(`${parent}.${child}`)) {
+          validUpdateFields[key] = value;
+        }
+      } else if (studentSchema.path(key)) {
+        validUpdateFields[key] = value;
+      }
+    }
+
+    if (Object.keys(validUpdateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields to update"
+      });
+    }
+
+    // Perform the bulk update
+    const result = await NewStudentModel.updateMany(
+      query,
+      { $set: validUpdateFields },
+      { 
+        runValidators: true,
+        multi: true 
+      }
+    );
+
+    // Get the updated students
+    const updatedStudents = await NewStudentModel.find(query);
+
+    res.status(200).json({
+      success: true,
+      message: "Students updated successfully",
+      updatedCount: result.modifiedCount,
+      matchedCount: result.matchedCount,
+      updatedStudents
+    });
+
+  } catch (error) {
+    console.error("Error in bulkUpdateStudents:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating students",
+      error: error.message
+    });
+  }
+};
 
 
 exports.getAllParentsWithChildren = async (req, res) => {

@@ -270,9 +270,9 @@ exports.getClassPerformance = async (req, res) => {
 
 exports.bulkUploadMarks = async (req, res) => {
     try {
-        const { examId, marks } = req.body;
+        const { examId, studentsMarks } = req.body;
 
-        // Validate exam exists and belongs to the school
+        // Verify the exam exists and belongs to the school
         const exam = await Exam.findOne({
             _id: examId,
             schoolId: req.user.schoolId,
@@ -283,44 +283,75 @@ exports.bulkUploadMarks = async (req, res) => {
         if (!exam) {
             return res.status(404).json({
                 success: false,
-                message: "Exam not found"
+                message: "Exam not found or access denied"
             });
         }
 
-        // Validate marks data
-        for (const markData of marks) {
-            // Validate subject marks against exam configuration
-            for (const subjectMark of markData.marks) {
-                const examSubject = exam.subjects.find(s => s.name === subjectMark.subjectName);
-                if (!examSubject) {
-                    throw new Error(`Subject ${subjectMark.subjectName} not found in exam configuration`);
+        const results = [];
+        const errors = [];
+
+        // Process each student's marks
+        for (const studentData of studentsMarks) {
+            try {
+                // Find existing mark for the student
+                let studentMark = await Mark.findOne({
+                    studentId: studentData.studentId,
+                    examId,
+                    schoolId: req.user.schoolId,
+                    className: req.user.classTeacher,
+                    section: req.user.section
+                });
+
+                if (studentMark) {
+                    // Update existing marks
+                    studentData.marks.forEach(newSubjectMark => {
+                        const examSubject = exam.subjects.find(s => s.name === newSubjectMark.subjectName);
+                        if (!examSubject) {
+                            throw new Error(`Subject ${newSubjectMark.subjectName} not found in exam configuration`);
+                        }
+                        if (Number(newSubjectMark.marks) > examSubject.totalMarks) {
+                            throw new Error(`Marks cannot exceed total marks for ${newSubjectMark.subjectName}`);
+                        }
+
+                        const existingSubjectIndex = studentMark.marks.findIndex(
+                            m => m.subjectName === newSubjectMark.subjectName
+                        );
+
+                        if (existingSubjectIndex !== -1) {
+                            studentMark.marks[existingSubjectIndex] = newSubjectMark;
+                        } else {
+                            studentMark.marks.push(newSubjectMark);
+                        }
+                    });
+                } else {
+                    // Create new student mark
+                    studentMark = new Mark({
+                        studentId: studentData.studentId,
+                        examId,
+                        schoolId: req.user.schoolId,
+                        className: req.user.classTeacher,
+                        section: req.user.section,
+                        marks: studentData.marks,
+                        coScholasticMarks: studentData.coScholasticMarks || []
+                    });
                 }
-                if (subjectMark.marks > examSubject.totalMarks) {
-                    throw new Error(`Marks cannot exceed total marks for ${subjectMark.subjectName}`);
-                }
-                // Add passing marks from exam configuration
-                subjectMark.totalMarks = examSubject.totalMarks;
-                subjectMark.passingMarks = examSubject.passingMarks;
-                subjectMark.isPassed = subjectMark.marks >= examSubject.passingMarks;
+
+                await studentMark.save();
+                results.push(studentMark);
+            } catch (error) {
+                errors.push({
+                    studentId: studentData.studentId,
+                    error: error.message
+                });
             }
         }
 
-        // Create mark records
-        const markRecords = marks.map(mark => ({
-            ...mark,
-            examId,
-            schoolId: req.user.schoolId,
-            className: req.user.classTeacher,
-            section: req.user.section
-        }));
-
-        // Use insertMany for bulk upload
-        const insertedMarks = await Mark.insertMany(markRecords);
-
         res.status(201).json({
             success: true,
-            message: `Successfully uploaded marks for ${insertedMarks.length} students`,
-            marks: insertedMarks
+            message: `Successfully processed marks for ${results.length} students`,
+            failedCount: errors.length,
+            results,
+            errors: errors.length > 0 ? errors : undefined
         });
     } catch (error) {
         res.status(500).json({
