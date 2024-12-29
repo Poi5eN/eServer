@@ -7,6 +7,7 @@ const teacher = require('./teacher')
 const { loginAll, logout } = require('../controllers/loginController')
 const classTimeTable = require('./classTimeTable');
 const exam = require('./exam');
+const marks = require('./marks');
 const results = require('./results')
 const feeStatus = require('./feeStatus')
 const inventory = require('./inventory')
@@ -23,6 +24,7 @@ router.use('/superAdmin',superAdmin);
 router.use('/contactUs', contactUs)
 router.use('/timeTable', classTimeTable);
 router.use('/exam', exam);
+router.use('/marks', marks);
 router.use('/teacher', teacher)
 router.use('/results', results)
 router.use('/employee', employee)

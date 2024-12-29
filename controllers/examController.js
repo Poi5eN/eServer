@@ -1,77 +1,185 @@
-// examController.js
-const ExamModel = require("../models/examModel");
+const Exam = require('../models/exam');
 
 exports.createExam = async (req, res) => {
     try {
-        const {
-            academicYear,
-            term,
-            examName,
-            examType,
-            classes,
-            gradingScale,
-            resultCalculation,
-            schedule
-        } = req.body;
-
-        // Validation
-        if (!academicYear || !term || !examName || !examType || !classes || !classes.length) {
-            return res.status(400).json({
-                success: false,
-                message: "Missing required fields"
-            });
-        }
-
-        // Check for existing exam
-        const existingExam = await ExamModel.findOne({
-            schoolId: req.user.schoolId,
-            academicYear,
-            term,
-            examName
+      const examData = {
+        ...req.body,
+        schoolId: req.user.schoolId,
+        createdBy: req.user._id,
+        className: req.body.className || req.user.classTeacher,
+        section: req.body.section || req.user.section
+      };
+  
+      // Log exam data for debugging
+      console.log("Exam Data:", examData);
+  
+      // Check if exam already exists for the same class and type
+      const existingExam = await Exam.findOne({
+        schoolId: examData.schoolId,
+        className: examData.className,
+        section: examData.section,
+        examType: req.body.examType,
+        startDate: req.body.startDate,
+        endDate: req.body.endDate
+      });
+  
+      if (existingExam) {
+        return res.status(400).json({
+          success: false,
+          message: "An exam with these details already exists"
         });
-
-        if (existingExam) {
-            return res.status(400).json({
-                success: false,
-                message: "An exam with this name already exists for the given term and academic year"
-            });
-        }
-
-        const examData = await ExamModel.create({
-            schoolId: req.user.schoolId,
-            academicYear,
-            term,
-            examName,
-            examType,
-            classes,
-            gradingScale,
-            resultCalculation,
-            schedule,
-            createdBy: req.user._id
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "Exam created successfully",
-            examData
-        });
+      }
+  
+      const exam = new Exam(examData);
+      await exam.save();
+      res.status(201).json({ success: true, exam });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to create exam",
-            error: error.message
-        });
+      console.error("Error:", error.message);
+      res.status(400).json({ success: false, message: error.message });
     }
+  };
+  
+
+exports.getExams = async (req, res) => {
+  try {
+    const query = {
+      schoolId: req.user.schoolId,
+      className: req.user.classTeacher,
+      section: req.user.section
+    };
+
+    const exams = await Exam.find(query)
+      .sort({ startDate: -1 });
+    
+    res.status(200).json({ success: true, exams });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
-exports.updateExam = async (req, res) => {
+// Get Single Exam
+exports.getExamById = async (req, res) => {
     try {
-        const { examId } = req.params;
-        const updateData = req.body;
+      const exam = await Exam.findOne({
+        _id: req.params.id,
+        schoolId: req.user.schoolId,
+        className: req.user.classTeacher,
+        section: req.user.section
+      });
+  
+      if (!exam) {
+        return res.status(404).json({
+          success: false,
+          message: "Exam not found"
+        });
+      }
+  
+      res.status(200).json({ success: true, exam });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+  
+  // Update Exam
+  exports.updateExam = async (req, res) => {
+    try {
+      const exam = await Exam.findOne({
+        _id: req.params.id,
+        schoolId: req.user.schoolId,
+        className: req.user.classTeacher,
+        section: req.user.section
+      });
+  
+      if (!exam) {
+        return res.status(404).json({
+          success: false,
+          message: "Exam not found"
+        });
+      }
+  
+      // Validate dates if they are being updated
+      if (req.body.startDate || req.body.endDate || req.body.resultPublishDate) {
+        validateExamDates(
+          req.body.startDate || exam.startDate,
+          req.body.endDate || exam.endDate,
+          req.body.resultPublishDate || exam.resultPublishDate
+        );
+      }
+  
+      Object.assign(exam, req.body);
+      await exam.save();
+  
+      res.status(200).json({ success: true, exam });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
+  
+  // Delete Exam
+  exports.deleteExam = async (req, res) => {
+    try {
+      const exam = await Exam.findOneAndDelete({
+        _id: req.params.id,
+        schoolId: req.user.schoolId,
+        className: req.user.classTeacher,
+        section: req.user.section
+      });
+  
+      if (!exam) {
+        return res.status(404).json({
+          success: false,
+          message: "Exam not found"
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Exam deleted successfully"
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+  
+  // Additional Exam Controllers
+  exports.getUpcomingExams = async (req, res) => {
+    try {
+      const upcomingExams = await Exam.find({
+        schoolId: req.user.schoolId,
+        className: req.user.classTeacher,
+        section: req.user.section,
+        startDate: { $gt: new Date() }
+      }).sort({ startDate: 1 });
+  
+      res.status(200).json({ success: true, exams: upcomingExams });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 
-        const exam = await ExamModel.findOne({
-            _id: examId,
-            schoolId: req.user.schoolId
+// Add additional helper function to validate exam dates
+const validateExamDates = (startDate, endDate, resultDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const result = new Date(resultDate);
+
+  if (end < start) {
+    throw new Error('End date cannot be before start date');
+  }
+  if (result < end) {
+    throw new Error('Result publish date cannot be before exam end date');
+  }
+};
+
+
+// Additional controller functions for examController.js
+exports.submitExamResults = async (req, res) => {
+    try {
+        const exam = await Exam.findOne({
+            _id: req.params.id,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
         });
 
         if (!exam) {
@@ -81,144 +189,182 @@ exports.updateExam = async (req, res) => {
             });
         }
 
-        if (exam.status !== 'DRAFT') {
-            return res.status(400).json({
+        // Add your exam results submission logic here
+        // This could involve creating mark entries for multiple students
+
+        res.status(200).json({
+            success: true,
+            message: "Exam results submitted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+exports.generateReportCard = async (req, res) => {
+    try {
+        const { examId, studentId } = req.params;
+        
+        // Find the mark record
+        const markRecord = await Mark.findOne({
+            examId,
+            studentId,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        }).populate('studentId', 'name rollNo');
+
+        if (!markRecord) {
+            return res.status(404).json({
                 success: false,
-                message: "Cannot update published or completed exam"
+                message: "Mark record not found"
             });
         }
 
-        // Update only allowed fields
-        const allowedUpdates = [
-            'examName', 'classes', 'gradingScale', 
-            'resultCalculation', 'schedule', 'status'
-        ];
-
-        allowedUpdates.forEach(field => {
-            if (updateData[field]) {
-                exam[field] = updateData[field];
-            }
-        });
-
-        exam.updatedBy = req.user._id;
-        const updatedExam = await exam.save();
-
         res.status(200).json({
             success: true,
-            message: "Exam updated successfully",
-            examData: updatedExam
+            reportCard: markRecord
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "Failed to update exam",
-            error: error.message
+            message: error.message
         });
     }
 };
 
-// examController.js
-exports.getExams = async (req, res) => {
+exports.getExamAnalytics = async (req, res) => {
     try {
-        const {
-            academicYear,
-            term,
-            examType,
-            status,
-            className,
-            section
-        } = req.query;
+        const examId = req.params.id;
 
-        // Build filter query
-        const filter = {
-            schoolId: req.user.schoolId, // Get the schoolId from the authenticated user
-            ...(academicYear && { academicYear }),
-            ...(term && { term }),
-            ...(examType && { examType }),
-            ...(status && { status })
+        // Get all marks for this exam
+        const marks = await Mark.find({
+            examId,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        });
+
+        // Calculate analytics
+        const analytics = {
+            totalStudents: marks.length,
+            passPercentage: (marks.filter(m => m.isPassed).length / marks.length) * 100,
+            highestScore: Math.max(...marks.map(m => m.percentage)),
+            lowestScore: Math.min(...marks.map(m => m.percentage)),
+            averageScore: marks.reduce((acc, curr) => acc + curr.percentage, 0) / marks.length,
+            gradeDistribution: {
+                'A+': marks.filter(m => m.grade === 'A+').length,
+                'A': marks.filter(m => m.grade === 'A').length,
+                'B': marks.filter(m => m.grade === 'B').length,
+                'C': marks.filter(m => m.grade === 'C').length,
+                'D': marks.filter(m => m.grade === 'D').length,
+                'F': marks.filter(m => m.grade === 'F').length
+            }
         };
 
-        // Add className or section filter if provided
-        if (className || section) {
-            filter['classes'] = {
-                $elemMatch: {
-                    ...(className && { className }),
-                    ...(section && { section })
-                }
-            };
-        }
-
-        // Fetch exams using the filter
-        const exams = await ExamModel.find(filter); 
-
-        // Manually map createdBy and updatedBy fields
-        const examData = exams.map((exam) => ({
-            ...exam.toObject(), // Convert exam to plain object
-            createdBy: { _id: exam.createdBy }, // Just include the user ID, or include name if needed
-            updatedBy: exam.updatedBy ? { _id: exam.updatedBy } : null,
-        }));
-
-        // Respond with exams data
         res.status(200).json({
             success: true,
-            message: "Exams retrieved successfully",
-            examData,
+            analytics
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "Failed to retrieve exams",
-            error: error.message,
+            message: error.message
         });
     }
 };
 
+// Additional controller functions for markController.js
+exports.getStudentMarks = async (req, res) => {
+    try {
+        const marks = await Mark.find({
+            studentId: req.params.studentId,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        }).populate('examId', 'name examType');
 
-// Example usage for creating an exam
-// const exampleExamData = {
-//     academicYear: "2023-24",
-//     term: "Term 1",
-//     examName: "First Unit Test",
-//     examType: "UNIT_TEST",
-//     classes: [{
-//         className: "I",
-//         section: "A",
-//         subjects: [{
-//             name: "Mathematics",
-//             code: "MATH101",
-//             type: "MAIN",
-//             assessmentComponents: [{
-//                 name: "Written Test",
-//                 weightage: 100,
-//                 maxMarks: 50,
-//                 minPassMarks: 17
-//             }],
-//             examDate: "2024-07-15",
-//             startTime: "09:00",
-//             endTime: "10:30",
-//             totalMarks: 50,
-//             passingMarks: 17
-//         }]
-//     }],
-//     gradingScale: [{
-//         name: "A1",
-//         minPercent: 90,
-//         maxPercent: 100,
-//         description: "Outstanding",
-//         gradePoint: 10
-//     }],
-//     resultCalculation: {
-//         includePreviousTerms: false,
-//         roundingMethod: "ROUND",
-//         passingCriteria: {
-//             overallPercentage: 33,
-//             minimumSubjects: 5,
-//             includeElectives: false
-//         }
-//     },
-//     schedule: {
-//         examStart: "2024-07-15",
-//         examEnd: "2024-07-30",
-//         resultDate: "2024-08-15"
-//     }
-// };
+        res.status(200).json({
+            success: true,
+            marks
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+exports.getClassPerformance = async (req, res) => {
+    try {
+        const marks = await Mark.find({
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        });
+
+        const performance = {
+            totalStudents: marks.length,
+            classAverage: marks.reduce((acc, curr) => acc + curr.percentage, 0) / marks.length,
+            passPercentage: (marks.filter(m => m.isPassed).length / marks.length) * 100,
+            subjectWisePerformance: {}
+        };
+
+        res.status(200).json({
+            success: true,
+            performance
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+exports.bulkUploadMarks = async (req, res) => {
+    try {
+        const { examId, marks } = req.body;
+
+        // Validate exam
+        const exam = await Exam.findOne({
+            _id: examId,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        });
+
+        if (!exam) {
+            return res.status(404).json({
+                success: false,
+                message: "Exam not found"
+            });
+        }
+
+        // Process bulk marks
+        const markRecords = marks.map(mark => ({
+            ...mark,
+            examId,
+            schoolId: req.user.schoolId,
+            className: req.user.classTeacher,
+            section: req.user.section
+        }));
+
+        const insertedMarks = await Mark.insertMany(markRecords);
+
+        res.status(201).json({
+            success: true,
+            message: `Successfully uploaded marks for ${insertedMarks.length} students`,
+            marks: insertedMarks
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

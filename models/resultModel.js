@@ -1,26 +1,77 @@
-// models/resultModel.js
 const mongoose = require("mongoose");
 
-const resultSchema = new mongoose.Schema({
-  examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  class: { type: String, required: true },
-  section: { type: String, required: true },
-  marks: {
-    type: Map,
-    of: Map // Nested Map for subject-wise component marks
+const marksSchema = new mongoose.Schema({
+  subjectName: {
+    type: String,
+    required: true
   },
-  totalMarks: { type: Number },
-  percentage: { type: Number },
-  grade: { type: String },
-  rank: { type: Number },
-  remarks: { type: String }
-}, {
-  timestamps: true
+  marksObtained: {
+    type: Number,
+    required: true
+  },
+  totalMarks: {
+    type: Number,
+    required: true
+  },
+  grade: String,
+  remarks: String
 });
 
-// Add indexes for faster queries
-resultSchema.index({ examId: 1, class: 1, section: 1 });
-resultSchema.index({ examId: 1, studentId: 1 }, { unique: true });
+const examResultSchema = new mongoose.Schema({
+  examId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Exam',
+    required: true
+  },
+  studentId: {
+    type: String,
+    required: true
+  },
+  rollNumber: {
+    type: String,
+    required: true
+  },
+  className: {
+    type: String,
+    required: true
+  },
+  section: {
+    type: String,
+    required: true
+  },
+  marks: [marksSchema],
+  totalMarks: {
+    type: Number,
+    required: true
+  },
+  percentage: {
+    type: Number,
+    required: true
+  },
+  grade: String,
+  rank: Number,
+  attendance: {
+    type: Number,
+    default: 100
+  },
+  status: {
+    type: String,
+    enum: ['PASS', 'FAIL', 'ABSENT'],
+    required: true
+  },
+  remarks: String,
+  createdBy: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
-module.exports = mongoose.model("Result", resultSchema);
+module.exports = mongoose.model("ExamResult", examResultSchema);
