@@ -1,10 +1,9 @@
-// Mark Model
 const mongoose = require('mongoose');
 
 const MarkSchema = new mongoose.Schema({
     schoolId: { type: String, required: true },
     examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-    studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+    studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'NewStudentModel', required: true }, // Updated ref
     className: { type: String, required: true },
     section: { type: String, required: true },
     marks: [{
@@ -54,6 +53,6 @@ MarkSchema.pre('save', function (next) {
     next();
 });
 
-const Mark = new mongoose.model("Mark", MarkSchema);
+const Mark = mongoose.model("Mark", MarkSchema);
 
 module.exports = Mark;
