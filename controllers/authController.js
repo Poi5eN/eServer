@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
 
 const createToken = (user) => {
-  const token = jwt.sign({ user }, process.env.JWT_SECRET , { expiresIn: '1m'  });
+  const token = jwt.sign({ user }, process.env.JWT_SECRET , { expiresIn: '7d' });
   return token;
 };
 
