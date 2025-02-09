@@ -15,9 +15,11 @@ const createToken = (user) => {
 //   console.log("tokenis--------------------", req.cookies)
 // };
 const setTokenCookie = (req, res, token) => {
-  res.cookie('token', token, { httpOnly: true, expires: new Date(Date.now() + 1 * 60 * 60 * 1000) });
+  // 1 minute = 1 * 60 seconds * 1000 milliseconds
+  res.cookie('token', token, { httpOnly: true, expires: new Date(Date.now() + 1 * 60 * 1000) });
   console.log('Token set in cookies:', token);
 };
+
 
 const fetchTokenFromCookie = (req) => {
   return req.cookies.token;
