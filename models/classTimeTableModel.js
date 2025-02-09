@@ -24,6 +24,10 @@ const timeTableSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    createdAt: {
+        type: Date,
+        default: Date.now()
+    },
     monday: daySchema,
     tuesday: daySchema,
     wednesday: daySchema,

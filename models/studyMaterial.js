@@ -27,6 +27,10 @@ const studyMaterial = new mongoose.Schema({
         url: {
             type: String
         }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
 });
 

@@ -27,10 +27,10 @@ const itemSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
-    sellAmount:{
-   type: Number,
-   required : true,
-   default: 0
+    sellAmount: {
+        type: Number,
+        required: true,
+        default: 0
     },
     createdAt: {
         type: Date,

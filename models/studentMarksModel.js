@@ -40,6 +40,10 @@ const studentMarksSchema = new mongoose.Schema({
         type: String,
         enum: ['DRAFT', 'FINALIZED'],
         default: 'DRAFT'
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
 });
 

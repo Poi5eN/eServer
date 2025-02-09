@@ -2755,12 +2755,13 @@ exports.getAllStudents = async (req, res) => {
   try {
     const { email, studentClass, section } = req.query;
 
-    console.log("Chaya", req.query);
-
+    console.log("Chaya", req.sessionFilter);
+    console.log("Ajay", req.user.schoolId);
     const filter = {
       ...(email ? { email: email } : {}),
       ...(studentClass ? { class: studentClass } : {}),
       ...(section ? { section: section } : {}),
+      ...req.sessionFilter 
     };
 
     console.log("P2 Filter", filter);

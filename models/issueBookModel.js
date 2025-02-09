@@ -39,6 +39,10 @@ const issueBookSchema = new mongoose.Schema({
         type: String,
         required: true,
         default: "issued"
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
 })
 

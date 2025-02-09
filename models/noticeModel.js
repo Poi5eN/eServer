@@ -22,6 +22,10 @@ const noticeSchema = new mongoose.Schema({
     role: {
         type: String
     },
+    createdAt: {
+        type: Date,
+        default: Date.now()
+    },
     file: {
         public_id: {
             type: String,

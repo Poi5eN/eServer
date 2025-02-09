@@ -29,6 +29,10 @@ const assignmentSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please Enter Subject"]
     },
+    createdAt: {
+        type: Date,
+        default: Date.now()
+    },
     file: {
         public_id: {
             type: String,

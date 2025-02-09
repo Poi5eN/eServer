@@ -41,7 +41,11 @@ const Results = new mongoose.Schema({
                 required: true
             }
         }
-    ]
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now()
+    }
     // resultData: [
     //     {
     //         studentName: {

@@ -23,7 +23,11 @@ const feeStructureSchema = new mongoose.Schema({
     type: Boolean,
     required : true,
     default: false
-  }
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now()
+}
 });
 
 const FeeStructure = mongoose.model('FeeStructure', feeStructureSchema);

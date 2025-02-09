@@ -25,7 +25,7 @@ const nameOfModel = (role) => {
 // Update loginAll function in loginController.js
 exports.loginAll = async (req, res, next) => {
     try {
-        const { email, password, role } = req.body;
+        let { email, password, role, session} = req.body;
 
         if (!email || !password || !role) {
             return res.status(400).json({
@@ -34,6 +34,23 @@ exports.loginAll = async (req, res, next) => {
             });
         }
 
+         // If session is not provided, determine the session dynamically based on the current date
+         if (!session) {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1; // Months are 0-based in JavaScript
+
+            if (currentMonth < 4) {
+                // Before April (January, February, March), use the previous year as the start of the session
+                session = `${currentYear - 1}-${currentYear}`;
+            } else {
+                // April or later, use the current year as the start of the session
+                session = `${currentYear}-${currentYear + 1}`;
+            }
+        }
+
+
+        console.log('session', session)
         const Collection = nameOfModel(role);
         
         if (!Collection) {
@@ -70,8 +87,11 @@ exports.loginAll = async (req, res, next) => {
             });
         }
 
-        const token = await createToken(user);
+        // const token = await createToken(user);
+        
+        const token = await createToken({ ...user.toObject(), session });
         setTokenCookie(req, res, token);
+        // res.cookie("token", token, { httpOnly: true });
 
         // Remove password from response
         const userResponse = user.toObject();
@@ -81,7 +101,8 @@ exports.loginAll = async (req, res, next) => {
             success: true,
             message: "Login Successfully",
             user: userResponse,
-            token
+            token,
+            session
         });
     } catch (err) {
         res.status(500).json({
