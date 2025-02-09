@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
 
 const createToken = (user) => {
-  const token = jwt.sign({ user }, process.env.JWT_SECRET , { expiresIn: '7d' });
+  const token = jwt.sign({ user }, process.env.JWT_SECRET , { expiresIn: '1m'  });
   return token;
 };
 
@@ -17,7 +17,7 @@ const createToken = (user) => {
 const setTokenCookie = (req, res, token) => {
   // 1 minute = 1 * 60 seconds * 1000 milliseconds
   res.cookie('token', token, { httpOnly: true, expires: new Date(Date.now() + 1 * 60 * 1000) });
-  console.log('Token set in cookies:', token);
+  console.log('Token set in cookies: for 1 minute', token);
 };
 
 
