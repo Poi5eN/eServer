@@ -239,6 +239,7 @@ exports.getAllTeachers = async (req, res) => {
 
     let filter = {
       ...(email ? { email: email } : {}),
+      ...req.sessionFilter 
     };
 
     const teachers = await Teacher.find({
@@ -302,6 +303,7 @@ exports.getAllFeeStructures = async (req, res) => {
     const filter = {
       ...(_id ? { _id: _id } : {}),
       ...(className ? { className: className } : {}),
+      ...req.sessionFilter 
     };
 
     const feeStructures = await FeeStructure.find({
@@ -410,6 +412,7 @@ exports.getAllAdditionalFee = async (req, res) => {
 
     const filter = {
       ...(_id ? { _id: _id } : {}),
+      ...req.sessionFilter 
     };
 
     const feeStructures = await FeeStructure.find({
@@ -431,6 +434,7 @@ exports.getAllFees = async (req, res) => {
     const filter = {
       ...(_id ? { _id: _id } : {}),
       ...(className ? { className: className } : {}),
+      ...req.sessionFilter 
     };
 
     // Fetch both regular and additional fees
@@ -511,6 +515,7 @@ exports.getAllBooks = async (req, res) => {
 
     const filter = {
       ...(_id ? { _id: _id } : {}),
+      ...req.sessionFilter 
     };
 
     const listOfAllBooks = await BookModel.find({
@@ -646,6 +651,7 @@ exports.getAllItems = async (req, res) => {
     const { _id } = req.query;
     const filter = {
       ...(_id ? { _id: _id } : {}),
+      ...req.sessionFilter 
     };
 
     const listOfAllItems = await ItemModel.find({
@@ -1199,7 +1205,7 @@ exports.createBulkRegistrations = async (req, res) => {
 // Controller for fetching all registrations (GET)
 exports.getRegistrations = async (req, res) => {
   try {
-    const registrations = await NewRegistrationModel.find({ schoolId: req.user.schoolId });
+    const registrations = await NewRegistrationModel.find({ schoolId: req.user.schoolId,...req.sessionFilter  });
     return res.status(200).json({
       success: true,
       message: "Registrations Data Successfully Fetched",
@@ -1245,7 +1251,7 @@ exports.getRegistrationById = async (req, res) => {
 exports.getRegistrationByNumber = async (req, res) => {
   try {
     const { registrationNumber } = req.params;
-    const registration = await NewRegistrationModel.findOne({ registrationNumber, schoolId: req.user.schoolId });
+    const registration = await NewRegistrationModel.findOne({ registrationNumber, schoolId: req.user.schoolId, ...req.sessionFilter  });
 
     if (!registration) {
       return res.status(404).json({
@@ -2202,7 +2208,7 @@ exports.getStudentAndParent = async (req, res) => {
     const schoolId = req.user.schoolId; // Extracted from the authenticated user
 
     // Find the student
-    const studentData = await NewStudentModel.findOne({ _id: studentId, schoolId })
+    const studentData = await NewStudentModel.findOne({ _id: studentId, schoolId, ...req.sessionFilter  })
       .populate('parentId'); // Populate parent details if the relationship is set up
 
     if (!studentData) {
@@ -2559,6 +2565,7 @@ exports.getAllParents = async (req, res) => {
 
     const filter = {
       ...(parentEmail ? { email: parentEmail } : {}),
+      ...req.sessionFilter 
     };
 
     const allParent = await ParentModel.find({
@@ -2681,7 +2688,7 @@ exports.getAllParentsWithChildren = async (req, res) => {
     const schoolId = req.user.schoolId;
 
     // Find all parents for the school and populate student details
-    const parents = await ParentModel.find({ schoolId, status: "active" })
+    const parents = await ParentModel.find({ schoolId, status: "active", ...req.sessionFilter  })
       .populate('studentIds'); // Ensure that studentIds field is populated with student details
 
     if (parents.length === 0) {
@@ -2852,6 +2859,7 @@ exports.getDeactivatedStudents = async (req, res) => {
       ...(email ? { email: email } : {}),
       ...(studentClass ? { class: studentClass } : {}),
       ...(section ? { section: section } : {}),
+      ...req.sessionFilter 
     };
 
     const deactivatedStudents = await NewStudentModel.find({
@@ -3434,6 +3442,7 @@ exports.getAllStudentStatus = async (req, res) => {
 
     const filter = {
       ...(email ? { email: email } : {}),
+      ...req.sessionFilter 
     };
 
     const allStudent = await NewStudentModel.find({
@@ -3586,6 +3595,7 @@ exports.getAllNotice = async (req, res) => {
       ...(className ? { class: className } : {}),
       ...(section ? { section: section } : {}),
       ...(role ? { role: role } : {}),
+      ...req.sessionFilter 
     };
 
     console.log("filter", filter);
@@ -3783,7 +3793,8 @@ exports.getAllCurriculum = async (req, res) => {
 
     const filter = {
       ...(curriculumId ? { _id: curriculumId } : {}),
-      ...(className ? { className: className } : {})
+      ...(className ? { className: className } : {}),
+      ...req.sessionFilter 
     }
 
     const allCurriculum = await CurriculumModel.find({ ...filter, schoolId: req.user.schoolId });
@@ -3949,7 +3960,8 @@ exports.getAllAssignment = async (req, res) => {
     const filter = {
       ...(assignmentId ? { _id: assignmentId } : {}),
       ...(className ? { className: className } : {}),
-      ...(section ? { section: section } : {})
+      ...(section ? { section: section } : {}),
+      ...req.sessionFilter 
     }
 
     const allAssignment = await AssignmentModel.find({ ...filter, schoolId: req.user.schoolId });
@@ -4117,6 +4129,7 @@ exports.getAllIssuedBookStudent = async (req, res) => {
 
     const filter = {
       ...(bookId ? { bookId: bookId } : {}),
+      ...req.sessionFilter 
     };
 
     const allStudent = await issueBookModel.find({
