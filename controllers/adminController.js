@@ -826,6 +826,161 @@ const generateRegistrationNumber = async () => {
 };
 
 
+// exports.createRegistration = async (req, res) => {
+//   try {
+//     const {
+//       studentFullName,
+//       guardianName,
+//       registerClass,
+//       studentAddress,
+//       mobileNumber,
+//       studentEmail,
+//       gender,
+//       amount,
+//     } = req.body;
+
+//     // Check for missing fields
+//     if (!studentFullName || !guardianName || !registerClass || !studentAddress || !mobileNumber || !studentEmail || !gender || !amount) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please enter all required data",
+//       });
+//     }
+
+//     // Check if the registration already exists for the specific school
+//     const registrationExist = await NewRegistrationModel.findOne({ mobileNumber, schoolId: req.user.schoolId });
+//     if (registrationExist) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Already registered in this school!",
+//       });
+//     }
+
+//     // Generate unique registration number
+//     const registrationNumber = await generateRegistrationNumber();
+
+//     // Create new registration entry
+//     const registrationData = await NewRegistrationModel.create({
+//       schoolId: req.user.schoolId,
+//       studentFullName,
+//       guardianName,
+//       registerClass,
+//       studentAddress,
+//       mobileNumber,
+//       studentEmail,
+//       gender,
+//       amount,
+//       registrationNumber,
+//     });
+
+//     // Send a confirmation email (if needed)
+//     if (registrationData) {
+//       const emailContent = `
+//         <p>Thank you for showing interest in our school.</p>
+//         <p>We have received your registration details.</p>
+//         <p>Student Name: ${studentFullName}</p>
+//         <p>Class: ${registerClass}</p>
+//         <p>Registration Number: ${registrationNumber}</p>
+//       `;
+//       sendEmail(studentEmail, "Registration Confirmation", emailContent)
+//         .then(() => {
+//           console.log("Registration confirmation email sent.");
+//         })
+//         .catch((error) => {
+//           console.error("Error sending confirmation email:", error.message);
+//         });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: "Registration created successfully and confirmation email sent.",
+//       });
+//     } else {
+//       return res.status(500).json({
+//         success: false,
+//         message: "Failed to create registration due to an error.",
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to create registration due to an error.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+// exports.createBulkRegistrations = async (req, res) => {
+//   try {
+//     const registrations = req.body.registrations;
+
+//     if (!registrations || !Array.isArray(registrations)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid data format. Expected an array of registrations.",
+//       });
+//     }
+
+//     const bulkOperations = registrations.map(async (registration) => {
+//       const {
+//         studentFullName,
+//         guardianName,
+//         registerClass,
+//         studentAddress,
+//         mobileNumber,
+//         studentEmail,
+//         gender,
+//         amount,
+//       } = registration;
+
+//       // Validate required fields
+//       if (!studentFullName || !guardianName || !registerClass || !studentAddress || !mobileNumber || !studentEmail || !gender || !amount) {
+//         throw new Error("Missing required data in one or more entries.");
+//       }
+
+//       // Check if the registration already exists for the specific school
+//       const registrationExist = await NewRegistrationModel.findOne({ mobileNumber, schoolId: req.user.schoolId });
+//       if (registrationExist) {
+//         throw new Error(`Already registered in this school for mobile number: ${mobileNumber}`);
+//       }
+
+//       // Generate unique registration number
+//       const registrationNumber = await generateRegistrationNumber();
+
+//       return {
+//         schoolId: req.user.schoolId,
+//         studentFullName,
+//         guardianName,
+//         registerClass,
+//         studentAddress,
+//         mobileNumber,
+//         studentEmail,
+//         gender,
+//         amount,
+//         registrationNumber,
+//       };
+//     });
+
+//     // Execute all operations
+//     const results = await Promise.all(bulkOperations);
+//     await NewRegistrationModel.insertMany(results);
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Bulk registrations created successfully.",
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to process bulk registration due to an error.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
 exports.createRegistration = async (req, res) => {
   try {
     const {
@@ -837,29 +992,48 @@ exports.createRegistration = async (req, res) => {
       studentEmail,
       gender,
       amount,
+      // Additional fields:
+      rollNo,
+      admissionNo,
+      fatherName,
+      motherName,
+      remarks,
+      transport,
+      studentPhoto,
+      motherPhoto,
+      fatherPhoto,
+      guardianPhoto
     } = req.body;
 
-    // Check for missing fields
-    if (!studentFullName || !guardianName || !registerClass || !studentAddress || !mobileNumber || !studentEmail || !gender || !amount) {
+    // Validate required fields (existing + additional)
+    if (
+      !studentFullName || !guardianName || !registerClass || !studentAddress ||
+      !mobileNumber || !studentEmail || !gender || !amount ||
+      !rollNo || !admissionNo || !fatherName || !motherName || !remarks ||
+      !transport || !studentPhoto || !motherPhoto || !fatherPhoto || !guardianPhoto
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Please enter all required data",
+        message: "Please enter all required data"
       });
     }
 
     // Check if the registration already exists for the specific school
-    const registrationExist = await NewRegistrationModel.findOne({ mobileNumber, schoolId: req.user.schoolId });
+    const registrationExist = await NewRegistrationModel.findOne({
+      mobileNumber,
+      schoolId: req.user.schoolId
+    });
     if (registrationExist) {
       return res.status(400).json({
         success: false,
-        message: "Already registered in this school!",
+        message: "Already registered in this school!"
       });
     }
 
     // Generate unique registration number
     const registrationNumber = await generateRegistrationNumber();
 
-    // Create new registration entry
+    // Create new registration entry with the createdBy field
     const registrationData = await NewRegistrationModel.create({
       schoolId: req.user.schoolId,
       studentFullName,
@@ -870,44 +1044,52 @@ exports.createRegistration = async (req, res) => {
       studentEmail,
       gender,
       amount,
+      rollNo,
+      admissionNo,
+      fatherName,
+      motherName,
+      remarks,
+      transport,
+      studentPhoto,
+      motherPhoto,
+      fatherPhoto,
+      guardianPhoto,
       registrationNumber,
+      createdBy: req.user.userId
     });
 
-    // Send a confirmation email (if needed)
-    if (registrationData) {
-      const emailContent = `
-        <p>Thank you for showing interest in our school.</p>
-        <p>We have received your registration details.</p>
-        <p>Student Name: ${studentFullName}</p>
-        <p>Class: ${registerClass}</p>
-        <p>Registration Number: ${registrationNumber}</p>
-      `;
-      sendEmail(studentEmail, "Registration Confirmation", emailContent)
-        .then(() => {
-          console.log("Registration confirmation email sent.");
-        })
-        .catch((error) => {
-          console.error("Error sending confirmation email:", error.message);
-        });
+    // Optionally, send a confirmation email
+    const emailContent = `
+      <p>Thank you for showing interest in our school.</p>
+      <p>We have received your registration details.</p>
+      <p>Student Name: ${studentFullName}</p>
+      <p>Class: ${registerClass}</p>
+      <p>Registration Number: ${registrationNumber}</p>
+    `;
+    sendEmail(studentEmail, "Registration Confirmation", emailContent)
+      .then(() => {
+        console.log("Registration confirmation email sent.");
+      })
+      .catch((error) => {
+        console.error("Error sending confirmation email:", error.message);
+      });
 
-      return res.status(201).json({
-        success: true,
-        message: "Registration created successfully and confirmation email sent.",
-      });
-    } else {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to create registration due to an error.",
-      });
-    }
+    return res.status(201).json({
+      success: true,
+      message: "Registration created successfully and confirmation email sent.",
+      registration: registrationData
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Failed to create registration due to an error.",
-      error: error.message,
+      error: error.message
     });
   }
 };
+
+
+
 
 
 exports.createBulkRegistrations = async (req, res) => {
@@ -917,7 +1099,7 @@ exports.createBulkRegistrations = async (req, res) => {
     if (!registrations || !Array.isArray(registrations)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid data format. Expected an array of registrations.",
+        message: "Invalid data format. Expected an array of registrations."
       });
     }
 
@@ -931,15 +1113,34 @@ exports.createBulkRegistrations = async (req, res) => {
         studentEmail,
         gender,
         amount,
+        // Additional (missing) fields:
+        rollNo,
+        admissionNo,
+        fatherName,
+        motherName,
+        remarks,
+        transport,
+        studentPhoto,   // New: student photo field
+        motherPhoto,
+        fatherPhoto,
+        guardianPhoto
       } = registration;
 
-      // Validate required fields
-      if (!studentFullName || !guardianName || !registerClass || !studentAddress || !mobileNumber || !studentEmail || !gender || !amount) {
+      // Validate required fields for each entry
+      if (
+        !studentFullName || !guardianName || !registerClass || !studentAddress ||
+        !mobileNumber || !studentEmail || !gender || !amount ||
+        !rollNo || !admissionNo || !fatherName || !motherName || !remarks ||
+        !transport || !studentPhoto || !motherPhoto || !fatherPhoto || !guardianPhoto
+      ) {
         throw new Error("Missing required data in one or more entries.");
       }
 
-      // Check if the registration already exists for the specific school
-      const registrationExist = await NewRegistrationModel.findOne({ mobileNumber, schoolId: req.user.schoolId });
+      // Check if the registration already exists for this school (using mobileNumber)
+      const registrationExist = await NewRegistrationModel.findOne({
+        mobileNumber,
+        schoolId: req.user.schoolId
+      });
       if (registrationExist) {
         throw new Error(`Already registered in this school for mobile number: ${mobileNumber}`);
       }
@@ -957,27 +1158,42 @@ exports.createBulkRegistrations = async (req, res) => {
         studentEmail,
         gender,
         amount,
+        rollNo,
+        admissionNo,
+        fatherName,
+        motherName,
+        remarks,
+        transport,
+        studentPhoto,
+        motherPhoto,
+        fatherPhoto,
+        guardianPhoto,
         registrationNumber,
+        createdBy: req.user.userId
       };
     });
 
-    // Execute all operations
+    // Execute all operations and insert them in bulk
     const results = await Promise.all(bulkOperations);
     await NewRegistrationModel.insertMany(results);
 
     res.status(201).json({
       success: true,
-      message: "Bulk registrations created successfully.",
+      message: "Bulk registrations created successfully."
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
       message: "Failed to process bulk registration due to an error.",
-      error: error.message,
+      error: error.message
     });
   }
 };
+
+
+
+
 
 
 // Controller for fetching all registrations (GET)
@@ -3944,5 +4160,25 @@ exports.getMyKids = async (req, res) => {
       message: "Kid Details is not get due to error",
       error: error.message,
     });
+  }
+};
+
+
+
+
+// In your admin controller
+exports.getAdminBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    // Convert slug back to schoolName (e.g., "balvaishali" -> "Bal Vaishali")
+    const schoolName = slug.replace(/(^\w|\s\w)/g, m => m.toUpperCase()).replace(/-/g, ' ');
+    
+    const admin = await Admin.findOne({ schoolName });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin not found' });
+    }
+    res.status(200).json({ success: true, admin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -7,7 +7,7 @@ const ExamSchema = new mongoose.Schema({
     name: { type: String, required: true },
     examType: { type: String, required: true },
     className: { type: String, required: true },
-    section: { type: String, required: true },
+    section: { type: String, required: false },
     subjects: [{
       name: { type: String, required: true },
       examDate: { type: Date, required: true },

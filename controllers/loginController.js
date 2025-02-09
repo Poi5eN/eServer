@@ -3,10 +3,10 @@ const EmployeeModel = require("../models/employeeModel.js");
 const NewStudentModel = require("../models/newStudentModel.js");
 const ParentModel = require("../models/parentModel.js");
 const Teacher = require("../models/teacherModel.js");
+const ThirdPartyUser = require("../models/thirdPartyModel");
 const { verifyPassword, createToken, setTokenCookie } = require("./authController.js");
 
 const nameOfModel = (role) => {
-
     let model;
 
     switch(role) {
@@ -15,52 +15,80 @@ const nameOfModel = (role) => {
         case "employee": model = EmployeeModel; break;
         case "student": model = NewStudentModel; break;
         case "teacher": model = Teacher; break;
+        case "thirdparty": model = ThirdPartyUser; break;
         default: model = null; break;
     }
 
     return model;
 }
 
-exports.loginAll =async (req, res, next) => {
-    try{  
-        const {email, password, role} = req.body;
-        
-        
+// Update loginAll function in loginController.js
+exports.loginAll = async (req, res, next) => {
+    try {
+        const { email, password, role } = req.body;
+
+        if (!email || !password || !role) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide email, password and role"
+            });
+        }
+
         const Collection = nameOfModel(role);
-        console.log("collection",Collection)
         
-        const user = await Collection.findOne({email}).select("+password");
+        if (!Collection) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role specified"
+            });
+        }
+
+        // For third party users, we need to check if they're active
+        const user = await Collection.findOne({ email }).select("+password");
         
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "Invalid credentials"
-            })
+            });
+        }
+
+        // Additional check for third party users
+        if (role === 'thirdparty' && user.status === 'inactive') {
+            return res.status(403).json({
+                success: false,
+                message: "Your account has been deactivated. Please contact the administrator."
+            });
         }
 
         const isMatch = await verifyPassword(password, user.password);
 
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Email and Password is not valid"
+            });
+        }
 
-    if (!isMatch) {
-        return res.status(401).json({
+        const token = await createToken(user);
+        setTokenCookie(req, res, token);
+
+        // Remove password from response
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
+        return res.status(200).json({
+            success: true,
+            message: "Login Successfully",
+            user: userResponse,
+            token
+        });
+    } catch (err) {
+        res.status(500).json({
             success: false,
-            message: "Email and Password is not valid"
-        })
+            message: err.message
+        });
     }
-    
-    const token = await createToken(user);
-    console.log("vijay------------>", token)
-     setTokenCookie(req, res, token);
-    
-    return res.status(200).json({
-        success: true,
-        message: "Login Successfully",
-        user,
-        token
-    })
-}catch (err) {
-    res.status(500).send({ message: err.message });
-  }
 }
 
 exports.logout = (req, res, next) => {

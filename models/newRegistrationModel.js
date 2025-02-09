@@ -8,54 +8,101 @@ const newRegistrationSchema = new mongoose.Schema({
   studentFullName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   guardianName: {
     type: String,
-    // required: true,
-    trim: true,
+    trim: true
   },
   registerClass: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   studentAddress: {
     type: String,
-    // required: true,
-    trim: true,
+    trim: true
   },
   mobileNumber: {
     type: Number,
-    // required: true,
-    // unique: true,
-    trim: true,
+    trim: true
   },
   studentEmail: {
     type: String,
-    // required: true,
     unique: true,
-    trim: true,
+    trim: true
   },
   gender: {
     type: String,
-    // required: true,
-    enum: ['Male', 'Female', 'Other'],
+    enum: ['Male', 'Female', 'Other']
   },
   amount: {
     type: Number,
-    required: true,
+    required: true
   },
   registrationNumber: {
     type: String,
     required: true,
     unique: true,
-    length: 6,
+    length: 6
   },
+  // Additional fields:
+  rollNo: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  admissionNo: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  fatherName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  motherName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  remarks: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  transport: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  // Image fields (store Base64-encoded string data)
+  studentPhoto: {
+    type: String,
+    required: true
+  },
+  motherPhoto: {
+    type: String,
+    required: true
+  },
+  fatherPhoto: {
+    type: String,
+    required: true
+  },
+  guardianPhoto: {
+    type: String,
+    required: true
+  },
+  // createdBy field to track the user who created the registration
+  createdBy: {
+    type: String,
+    required: true,
+    trim: true
+  }
 }, {
-  timestamps: true, // Adds createdAt and updatedAt timestamps
+  timestamps: true  // Automatically adds createdAt and updatedAt fields
 });
 
 const NewRegistrationModel = mongoose.model('NewRegistration', newRegistrationSchema);
-
 module.exports = NewRegistrationModel;

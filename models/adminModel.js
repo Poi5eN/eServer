@@ -9,6 +9,13 @@ const adminSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    slug: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        index: true
+      },
     email: {
         type: String,
         required: [true, "Please Enter your email Address"],

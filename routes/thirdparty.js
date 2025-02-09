@@ -1,0 +1,106 @@
+// const { Router } = require('express');
+// const router = Router();
+// // const thirdParty = require('../controllers/thirdpartyController');
+// const admin = require('../controllers/adminController'); // For registration functionality
+// const verifyToken = require('../middleware/auth');
+// const { verifySchoolAccess, thirdParty } = require('../controllers/thirdpartyController');
+
+// console.log('Third Party routes loaded');
+
+// // Profile routes
+// // router.get('/getProfile', verifyToken, thirdParty.getThirdPartyProfile);
+// // router.put('/updateProfile', verifyToken, thirdParty.updateThirdPartyProfile);
+
+// // Registration management routes
+// // router.post('/registration/:schoolId', 
+// //     verifyToken, 
+// //     verifySchoolAccess, 
+// //     admin.createRegistration
+// // );
+
+// // router.get('/registrations/:schoolId', 
+// //     verifyToken, 
+// //     verifySchoolAccess, 
+// //     thirdParty.getSchoolRegistrations
+// // );
+
+// // // School access routes
+// // router.get('/assigned-schools', 
+// //     verifyToken, 
+// //     thirdParty.getAssignedSchools
+// // );
+
+// // // Activity logs
+// // router.get('/activity-logs', 
+// //     verifyToken, 
+// //     thirdParty.getActivityLogs
+// // );
+
+// // // For SuperAdmin to manage third party users
+// // router.post('/create', 
+// //     verifyToken, 
+// //     thirdParty.isSuperAdmin, 
+// //     thirdParty.createThirdPartyUser
+// // );
+
+// // router.put('/update/:userId', 
+// //     verifyToken, 
+// //     thirdParty.isSuperAdmin, 
+// //     thirdParty.updateThirdPartyUser
+// // );
+
+// // router.put('/deactivate/:userId', 
+// //     verifyToken, 
+// //     thirdParty.isSuperAdmin, 
+// //     thirdParty.deactivateThirdPartyUser
+// // );
+
+// // router.get('/all', 
+// //     verifyToken, 
+// //     thirdParty.isSuperAdmin, 
+// //     thirdParty.getAllThirdPartyUsers
+// // );
+
+// module.exports = router;
+
+
+
+
+
+
+
+
+
+// routes/thirdPartyRoutes.js
+const express = require('express');
+const router = express.Router();
+const registrationController = require('../controllers/thirdpartyController');
+const verifyToken = require('../middleware/auth');
+
+// Registration CRUD routes
+router.post('/registrations', 
+    verifyToken,
+    registrationController.createRegistration
+);
+
+router.get('/registrations', 
+    verifyToken,
+    registrationController.getAllRegistrations
+);
+
+router.get('/registrations/:registrationId', 
+    verifyToken,
+    registrationController.getRegistration
+);
+
+router.put('/registrations/:registrationId', 
+    verifyToken,
+    registrationController.updateRegistration
+);
+
+router.delete('/registrations/:registrationId', 
+    verifyToken,
+    registrationController.deleteRegistration
+);
+
+module.exports = router;

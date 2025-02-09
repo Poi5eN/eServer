@@ -13,6 +13,7 @@ const feeStatus = require('./feeStatus')
 const inventory = require('./inventory')
 const employee = require('./employee')
 const event = require('./event')
+const thirdParty = require('./thirdparty');
 
 const router = Router()
 
@@ -33,5 +34,7 @@ router.use('/fees', feeStatus)
 router.use('/inventory', inventory)
 router.use('/employee', employee)
 router.use('/events', event)
+
+router.use('/thirdparty', thirdParty);
 
 module.exports = router
