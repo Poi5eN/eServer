@@ -76,12 +76,19 @@ const express = require('express');
 const router = express.Router();
 const registrationController = require('../controllers/thirdpartyController');
 const verifyToken = require('../middleware/auth');
+const { uploadResults } = require('../controllers/resultController');
+const { uploads } = require('../middleware/multer');
+const { convertImagesToBase64 } = require('../middleware/imageUpload');
 
 // Registration CRUD routes
-router.post('/registrations', 
+// POST route for creating registration in ThirdParty
+router.post(
+    '/registrations',
     verifyToken,
+    uploads,
+    convertImagesToBase64,
     registrationController.createRegistration
-);
+  );
 
 router.get('/registrations', 
     verifyToken,

@@ -3,6 +3,7 @@ const router = Router()
 const admin = require('../controllers/adminController')
 const {singleUpload, uploads} = require('../middleware/multer')
 const verifyToken = require('../middleware/auth')
+const { convertImagesToBase64 } = require('../middleware/imageUpload')
 
 console.log('Admin routes loaded'); // Add this line
  
@@ -42,7 +43,14 @@ router.delete('/deleteItem/:itemId', verifyToken, admin.deleteItem);
 router.put('/updateItem/:itemId', verifyToken, admin.updateItem);
 
 // POST route for creating registration
-router.post('/createRegistration', verifyToken, uploads, admin.createRegistration);
+// router.post('/createRegistration', verifyToken, uploads, admin.createRegistration);
+router.post(
+    '/createRegistration',
+    verifyToken,
+    uploads,
+    convertImagesToBase64,
+    admin.createRegistration
+  );
 router.post('/createBulkRegistrations', verifyToken, uploads, admin.createBulkRegistrations);
 router.put('/editRegistration/:registrationNumber', verifyToken, uploads, admin.editRegistration);
 router.delete('/deleteRegistration/:registrationNumber', verifyToken, uploads, admin.deleteRegistration);
