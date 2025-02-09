@@ -516,3 +516,56 @@ exports.deleteRegistration = async (req, res) => {
         });
     }
 };
+
+
+
+
+
+
+
+
+/**
+ * Fetch all registrations for the schools assigned to the third-party user.
+ * Optionally, filter by a specific school ID provided as a query parameter.
+ */
+exports.getAllRegistrationsForThirdParty = async (req, res) => {
+    try {
+      // Get the list of assigned school IDs from req.user.
+      // (Assuming req.user.assignedSchools is an array of objects with a schoolId property.)
+      const assignedSchoolIds = req.user.assignedSchools.map(school => school.schoolId);
+  
+      // Check if the client provided a schoolId query parameter.
+      let filterSchoolIds = assignedSchoolIds;
+      if (req.query.schoolId) {
+        const requestedSchoolId = req.query.schoolId;
+        // Verify that the requested schoolId is in the assigned list.
+        if (!assignedSchoolIds.includes(requestedSchoolId)) {
+          return res.status(403).json({
+            success: false,
+            message: "You do not have access to this school."
+          });
+        }
+        // Use only the requested school ID for filtering.
+        filterSchoolIds = [requestedSchoolId];
+      }
+  
+      // Find registrations whose schoolId is in the filterSchoolIds array.
+      const registrations = await NewRegistrationModel.find({
+        schoolId: { $in: filterSchoolIds }
+      }).sort({ createdAt: -1 });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Registrations fetched successfully.",
+        data: registrations
+      });
+    } catch (error) {
+      console.error("Error fetching registrations for third party:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch registrations due to an error.",
+        error: error.message
+      });
+    }
+  };
+  

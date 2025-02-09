@@ -110,4 +110,6 @@ router.delete('/registrations/:registrationId',
     registrationController.deleteRegistration
 );
 
+router.get('/thirdparty/registrations', verifyToken, registrationController.getAllRegistrationsForThirdParty);
+
 module.exports = router;
