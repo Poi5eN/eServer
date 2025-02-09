@@ -17,6 +17,7 @@ const corsOptions = {
   credentials: true, // Include cookies and authentication headers
 };
 
+console.log('hey buddy',corsOptions)
 app.use(cors(corsOptions));
 
 

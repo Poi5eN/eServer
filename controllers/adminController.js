@@ -1095,9 +1095,6 @@ exports.createRegistration = async (req, res) => {
 };
 
 
-
-
-
 exports.createBulkRegistrations = async (req, res) => {
   try {
     const registrations = req.body.registrations;
@@ -1196,9 +1193,6 @@ exports.createBulkRegistrations = async (req, res) => {
     });
   }
 };
-
-
-
 
 
 
