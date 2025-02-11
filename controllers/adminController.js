@@ -2230,6 +2230,57 @@ exports.getStudentAndParent = async (req, res) => {
 };
 
 
+/**
+ * Approve Admission
+ * PATCH /approveAdmission/:studentId
+ * Sets the student's approvalStatus to "approved".
+ */
+exports.approveAdmission = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const student = await NewStudentModel.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+    }
+    student.approvalStatus = "approved";
+    await student.save();
+    return res.status(200).json({
+      success: true,
+      message: "Admission approved successfully",
+      student
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Get Pending Admissions
+ * GET /pendingAdmissions
+ * Retrieves all student records with approvalStatus "pending".
+ */
+exports.getPendingAdmissions = async (req, res) => {
+  try {
+    const pendingAdmissions = await NewStudentModel.find({ approvalStatus: "pending" });
+    return res.status(200).json({
+      success: true,
+      message: "Pending admissions fetched successfully",
+      data: pendingAdmissions
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 
 // PENDING ADMISSION
 exports.approveAdmission = async (req, res) => {

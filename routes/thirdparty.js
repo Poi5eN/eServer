@@ -79,6 +79,46 @@ const verifyToken = require('../middleware/auth');
 const { uploadResults } = require('../controllers/resultController');
 const { uploads } = require('../middleware/multer');
 const { convertImagesToBase64 } = require('../middleware/imageUpload');
+const thirdpartyAdmissionController = require('../controllers/thirdpartyAdmissionController');
+
+/**
+ * POST /api/thirdparty/admissions
+ * Creates a new admission.
+ * - Expects either JSON or multipart/form-data.
+ * - Uses verifyToken middleware to ensure the user is authenticated.
+ */
+router.post(
+  '/admissions',
+  verifyToken,
+  uploads,                // For handling file uploads (if any)
+  convertImagesToBase64,  // To convert images to Base64 (if needed)
+  thirdpartyAdmissionController.createAdmission
+);
+
+/**
+ * GET /api/thirdparty/admissions
+ * Returns all admissions (student records) for all schools assigned to the third‑party user.
+ * Optional query parameters:
+ *   - schoolId (to filter results to a single school)
+ *   - page, limit (for pagination)
+ */
+router.get(
+  '/admissions',
+  verifyToken,
+  thirdpartyAdmissionController.getAllStudentsForThirdParty
+);
+
+/**
+ * GET /api/thirdparty/studentsBySchool
+ * Returns all students for a specific school.
+ * Expects a query parameter "schoolId". The controller will verify that the schoolId is assigned to the user.
+ */
+router.get(
+  '/studentsBySchool',
+  verifyToken,
+  thirdpartyAdmissionController.getStudentsBySchool
+);
+
 
 // Registration CRUD routes
 // POST route for creating registration in ThirdParty
@@ -113,19 +153,46 @@ router.delete('/registrations/:registrationId',
 router.get('/thirdparty/registrations', verifyToken, registrationController.getAllRegistrationsForThirdParty);
 
 
-router.post('/admissions', 
-    verifyToken, 
-    uploads.fields([{ name: 'studentImage', maxCount: 1 }, { name: 'parentImage', maxCount: 1 }]),
-    admissionController.createAdmission
-  );
-  
-  router.get('/admissions', verifyToken, admissionController.getSchoolStudents);
-//   router.get('/admissions/:studentId', verifyToken, admissionController.getStudent);
-//   router.put('/admissions/:studentId', 
-//     verifyToken,
-//     uploads.fields([{ name: 'studentImage', maxCount: 1 }, { name: 'parentImage', maxCount: 1 }]),
-//     admissionController.updateStudent
-//   );
-//   router.delete('/admissions/:studentId', verifyToken, admissionController.deleteStudent);
+
+// routes/thirdPartyAdmissionRoutes.js
+
+/**
+ * POST /api/thirdparty/admissions
+ * Creates a new admission.
+ * - Expects either JSON or multipart/form-data.
+ * - Uses verifyToken middleware to ensure the user is authenticated.
+ */
+// router.post(
+//   '/admissions',
+//   verifyToken,
+//   uploads,                // For handling file uploads (if any)
+//   convertImagesToBase64,  // To convert images to Base64 (if needed)
+//   thirdpartyAdmissionController.createAdmission
+// );
+
+// /**
+//  * GET /api/thirdparty/admissions
+//  * Returns all admissions (student records) for all schools assigned to the third‑party user.
+//  * Optional query parameters:
+//  *   - schoolId (to filter results to a single school)
+//  *   - page, limit (for pagination)
+//  */
+// router.get(
+//   '/admissions',
+//   verifyToken,
+//   thirdpartyAdmissionController.getAllStudentsForThirdParty
+// );
+
+// /**
+//  * GET /api/thirdparty/studentsBySchool
+//  * Returns all students for a specific school.
+//  * Expects a query parameter "schoolId". The controller will verify that the schoolId is assigned to the user.
+//  */
+// router.get(
+//   '/studentsBySchool',
+//   verifyToken,
+//   thirdpartyAdmissionController.getStudentsBySchool
+// );
+
 
 module.exports = router;

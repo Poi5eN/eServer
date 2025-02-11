@@ -79,8 +79,10 @@ router.get('/getDeactivatedStudents', verifyToken, singleUpload, admin.getDeacti
 router.delete('/deleteStudent', verifyToken, singleUpload, admin.deleteStudent);
 
 // PENDING ADMISSION THIRD PARTY
-router.patch('/approveAdmission/:studentId', verifyToken, approvalController.approveAdmission);
-router.get('/pendingAdmissions', verifyToken, approvalController.getPendingAdmissions);
+// In your admin routes file (for example, routes/adminRoutes.js)
+router.patch('/approveAdmission/:studentId', verifyToken, admin.approveAdmission);
+router.get('/pendingAdmissions', verifyToken, admin.getPendingAdmissions);
+
 
 router.get('/getLastYearStudents', verifyToken, admin.getStudentsCreatedAfterAprilOfCurrentYear)
 
