@@ -429,3 +429,76 @@ exports.createAdmission = async (req, res) => {
       });
     }
   };
+
+
+
+
+
+
+
+
+
+
+  /**
+ * getStudentsByClassSectionThirdParty
+ *
+ * Fetches student records filtered by school, class, and section.
+ * For third‑party users, if a schoolId is provided the function verifies that
+ * the school is among those the user is assigned to. If no schoolId is provided,
+ * the query is restricted to all assigned schools.
+ *
+ * Query parameters:
+ *  - schoolId (optional)
+ *  - studentClass (optional)
+ *  - studentSection (optional)
+ *  - page (optional, default: 1)
+ *  - limit (optional, default: 10)
+ */
+exports.getStudentsByClassSectionThirdParty = async (req, res) => {
+    try {
+      const { schoolId, studentClass, studentSection } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+  
+      const query = {};
+  
+      // If a schoolId is provided, verify access for the third-party user
+      if (schoolId) {
+        const hasAccess = req.user.assignedSchools.some(s => s.schoolId === schoolId);
+        if (!hasAccess) {
+          return res.status(403).json({
+            success: false,
+            message: "You do not have access to this school."
+          });
+        }
+        query.schoolId = schoolId;
+      } else {
+        // No schoolId provided: limit the query to all schools assigned to the third-party user
+        query.schoolId = { $in: req.user.assignedSchools.map(s => s.schoolId) };
+      }
+  
+      if (studentClass) query.class = studentClass;
+      if (studentSection) query.section = studentSection;
+  
+      const students = await NewStudentModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+  
+      const totalStudents = await NewStudentModel.countDocuments(query);
+  
+      return res.status(200).json({
+        success: true,
+        data: students,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalStudents / limit),
+          totalStudents
+        }
+      });
+    } catch (error) {
+      console.error("Error in getStudentsByClassSectionThirdParty:", error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  };

@@ -2235,6 +2235,128 @@ exports.getStudentAndParent = async (req, res) => {
  * PATCH /approveAdmission/:studentId
  * Sets the student's approvalStatus to "approved".
  */
+// exports.approveAdmission = async (req, res) => {
+//   try {
+//     const { studentId } = req.params;
+//     const student = await NewStudentModel.findById(studentId);
+//     if (!student) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Student not found"
+//       });
+//     }
+//     student.approvalStatus = "approved";
+//     await student.save();
+//     return res.status(200).json({
+//       success: true,
+//       message: "Admission approved successfully",
+//       student
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
+
+/**
+ * Get Pending Admissions
+ * GET /pendingAdmissions
+ * Retrieves all student records with approvalStatus "pending".
+ */
+// exports.getPendingAdmissions = async (req, res) => {
+//   try {
+//     const pendingAdmissions = await NewStudentModel.find({ approvalStatus: "pending" });
+//     return res.status(200).json({
+//       success: true,
+//       message: "Pending admissions fetched successfully",
+//       data: pendingAdmissions
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
+
+
+// PENDING ADMISSION
+// exports.approveAdmission = async (req, res) => {
+//   try {
+//     const { studentId } = req.params;
+//     const student = await Student.findById(studentId);
+    
+//     if (!student) {
+//       return res.status(404).json({ 
+//         success: false, 
+//         message: "Student not found" 
+//       });
+//     }
+
+//     if (student.approvalStatus === 'approved') {
+//       return res.status(400).json({ 
+//         success: false, 
+//         message: "Admission already approved" 
+//       });
+//     }
+
+//     student.approvalStatus = 'approved';
+//     await student.save();
+
+//     res.status(200).json({ 
+//       success: true, 
+//       message: "Admission approved successfully",
+//       student
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ 
+//       success: false, 
+//       message: error.message 
+//     });
+//   }
+// };
+
+// exports.getPendingAdmissions = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 10;
+//     const skip = (page - 1) * limit;
+
+//     const query = { approvalStatus: 'pending' };
+
+//     const students = await Student.find(query)
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 });
+
+//     const total = await Student.countDocuments(query);
+
+//     res.status(200).json({
+//       success: true,
+//       students,
+//       pagination: {
+//         currentPage: page,
+//         totalPages: Math.ceil(total / limit),
+//         totalStudents: total
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ 
+//       success: false, 
+//       message: error.message 
+//     });
+//   }
+// };
+
+
+/**
+ * Approve Admission
+ * PATCH /approveAdmission/:studentId
+ * Sets the student's approvalStatus to "approved".
+ */
 exports.approveAdmission = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -2282,75 +2404,56 @@ exports.getPendingAdmissions = async (req, res) => {
 };
 
 
-// PENDING ADMISSION
-exports.approveAdmission = async (req, res) => {
+
+/**
+ * getStudentsByClassSectionAdmin
+ *
+ * Fetches student records filtered by school, class, and section.
+ * This version is for admin users who have full access.
+ *
+ * Query parameters:
+ *  - schoolId (optional)
+ *  - studentClass (optional)
+ *  - studentSection (optional)
+ *  - page (optional, default: 1)
+ *  - limit (optional, default: 10)
+ */
+exports.getStudentsByClassSectionAdmin = async (req, res) => {
   try {
-    const { studentId } = req.params;
-    const student = await Student.findById(studentId);
-    
-    if (!student) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Student not found" 
-      });
-    }
-
-    if (student.approvalStatus === 'approved') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Admission already approved" 
-      });
-    }
-
-    student.approvalStatus = 'approved';
-    await student.save();
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Admission approved successfully",
-      student
-    });
-
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
-    });
-  }
-};
-
-exports.getPendingAdmissions = async (req, res) => {
-  try {
+    const { schoolId, studentClass, studentSection } = req.query;
+    // Convert page and limit to numbers, with defaults:
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const query = { approvalStatus: 'pending' };
+    // Build the query object based on provided filters
+    const query = {};
+    if (schoolId) query.schoolId = schoolId;
+    if (studentClass) query.class = studentClass;
+    if (studentSection) query.section = studentSection;
 
-    const students = await Student.find(query)
+    // Query the student collection
+    const students = await NewStudentModel.find(query)
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      .limit(limit);
 
-    const total = await Student.countDocuments(query);
+    const totalStudents = await NewStudentModel.countDocuments(query);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      students,
+      data: students,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalStudents: total
+        totalPages: Math.ceil(totalStudents / limit),
+        totalStudents
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
-    });
+    console.error("Error in getStudentsByClassSectionAdmin:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 
 

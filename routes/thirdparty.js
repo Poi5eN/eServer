@@ -195,4 +195,8 @@ router.get('/thirdparty/registrations', verifyToken, registrationController.getA
 // );
 
 
+// GET route to fetch students by class/section (Third-Party)
+router.get('/students/filter', verifyToken, thirdpartyAdmissionController.getStudentsByClassSectionThirdParty);
+
+
 module.exports = router;

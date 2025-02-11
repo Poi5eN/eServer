@@ -84,6 +84,14 @@ router.patch('/approveAdmission/:studentId', verifyToken, admin.approveAdmission
 router.get('/pendingAdmissions', verifyToken, admin.getPendingAdmissions);
 
 
+
+// GET route to fetch students by class/section (Admin)
+router.get('/students/filter', verifyToken, admin.getStudentsByClassSectionAdmin);
+
+
+
+
+
 router.get('/getLastYearStudents', verifyToken, admin.getStudentsCreatedAfterAprilOfCurrentYear)
 
 
