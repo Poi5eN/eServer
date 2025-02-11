@@ -78,6 +78,10 @@ router.put('/updateStudent', verifyToken, singleUpload, admin.updateStudent);
 router.get('/getDeactivatedStudents', verifyToken, singleUpload, admin.getDeactivatedStudents);
 router.delete('/deleteStudent', verifyToken, singleUpload, admin.deleteStudent);
 
+// PENDING ADMISSION THIRD PARTY
+router.patch('/approveAdmission/:studentId', verifyToken, approvalController.approveAdmission);
+router.get('/pendingAdmissions', verifyToken, approvalController.getPendingAdmissions);
+
 router.get('/getLastYearStudents', verifyToken, admin.getStudentsCreatedAfterAprilOfCurrentYear)
 
 

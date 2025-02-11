@@ -2231,6 +2231,76 @@ exports.getStudentAndParent = async (req, res) => {
 
 
 
+// PENDING ADMISSION
+exports.approveAdmission = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const student = await Student.findById(studentId);
+    
+    if (!student) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Student not found" 
+      });
+    }
+
+    if (student.approvalStatus === 'approved') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Admission already approved" 
+      });
+    }
+
+    student.approvalStatus = 'approved';
+    await student.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Admission approved successfully",
+      student
+    });
+
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+exports.getPendingAdmissions = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = { approvalStatus: 'pending' };
+
+    const students = await Student.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Student.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      students,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalStudents: total
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+
 
 
 exports.addSibling = async (req, res) => {

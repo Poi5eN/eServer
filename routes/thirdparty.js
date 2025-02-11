@@ -112,4 +112,20 @@ router.delete('/registrations/:registrationId',
 
 router.get('/thirdparty/registrations', verifyToken, registrationController.getAllRegistrationsForThirdParty);
 
+
+router.post('/admissions', 
+    verifyToken, 
+    uploads.fields([{ name: 'studentImage', maxCount: 1 }, { name: 'parentImage', maxCount: 1 }]),
+    admissionController.createAdmission
+  );
+  
+  router.get('/admissions', verifyToken, admissionController.getSchoolStudents);
+//   router.get('/admissions/:studentId', verifyToken, admissionController.getStudent);
+//   router.put('/admissions/:studentId', 
+//     verifyToken,
+//     uploads.fields([{ name: 'studentImage', maxCount: 1 }, { name: 'parentImage', maxCount: 1 }]),
+//     admissionController.updateStudent
+//   );
+//   router.delete('/admissions/:studentId', verifyToken, admissionController.deleteStudent);
+
 module.exports = router;
